@@ -1,0 +1,250 @@
+CREATE SEQUENCE SQ_RENTACAR_MAKE START WITH 1 INCREMENT BY 1;
+CREATE TABLE RENTACAR_MAKE(MAKE_ID INT NOT NULL PRIMARY KEY
+                          ,MAKE VARCHAR2(50));
+                          
+CREATE OR REPLACE TRIGGER TR_RENTACAR_MAKE
+  BEFORE INSERT ON RENTACAR_MAKE
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_MAKE.nextval INTO :new.MAKE_ID FROM dual;
+END;
+ 
+CREATE SEQUENCE SQ_RENTACAR_MODEL START WITH 1 INCREMENT BY 1;                        
+CREATE TABLE RENTACAR_MODEL(MODEL_ID INT NOT NULL PRIMARY KEY
+                           ,MAKE_ID INT
+                           ,MODEL VARCHAR2(50)
+                           ,CONSTRAINT FK_MAKE 
+                            FOREIGN KEY (MAKE_ID) 
+                            REFERENCES RENTACAR_MAKE(MAKE_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_MODEL
+  BEFORE INSERT ON RENTACAR_MODEL
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_MODEL.nextval INTO :new.MODEL_ID FROM dual;
+END;
+                            
+CREATE SEQUENCE SQ_RENATCAR_STATE START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENATCAR_STATE(CODE VARCHAR2(10) NOT NULL PRIMARY KEY
+                           ,NAME VARCHAR2(50)
+                           ,AVG_GAS_PRICE FLOAT
+                           ,CRASH_FATALITY_RATE FLOAT);
+ 
+ 
+                           
+CREATE SEQUENCE SQ_RENTACAR_CITY START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_CITY(CITY_ID INT NOT NULL PRIMARY KEY
+                          ,NAME VARCHAR2(100)
+                          ,LONGITUDE FLOAT
+                          ,LATITUDE FLOAT
+                          ,STATE VARCHAR2(10)
+                          ,GEO_LOC SDO_GEOMETRY
+                          ,CONSTRAINT FK_STATE
+                           FOREIGN KEY (STATE)
+                           REFERENCES RENATCAR_STATE(CODE));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_CITY
+  BEFORE INSERT ON RENTACAR_CITY
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_CITY.nextval INTO :new.CITY_ID FROM dual;
+END;
+
+
+                           
+CREATE SEQUENCE SQ_RENTACAR_ADDRESS START WITH 1 INCREMENT BY 1;            
+CREATE TABLE RENTACAR_ADDRESS(ADDRESS_ID INT NOT NULL PRIMARY KEY
+                             ,PHONE VARCHAR2(20)
+                             ,CITY_ID INT
+                             ,CONSTRAINT FK_CITY
+                              FOREIGN KEY (CITY_ID)
+                              REFERENCES RENTACAR_CITY(CITY_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_ADDRESS
+  BEFORE INSERT ON RENTACAR_ADDRESS
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_ADDRESS.nextval INTO :new.ADDRESS_ID FROM dual;
+END;
+
+
+                              
+CREATE SEQUENCE SQ_RENTACAR_BRANCH START WITH 1 INCREMENT BY 1;                           
+CREATE TABLE RENTACAR_BRANCH(BRANCH_ID INT NOT NULL PRIMARY KEY
+                            ,NAME VARCHAR2(50)
+                            ,ADDRESS_ID INT
+                            ,CONSTRAINT FK_ADDRESS
+                             FOREIGN KEY (ADDRESS_ID)
+                             REFERENCES RENTACAR_ADDRESS(ADDRESS_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_BRANCH
+  BEFORE INSERT ON RENTACAR_BRANCH
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_BRANCH.nextval INTO :new.BRANCH_ID FROM dual;
+END;
+
+
+
+CREATE SEQUENCE SQ_RENTACAR_CAR START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_CAR(CAR_ID INT NOT NULL PRIMARY KEY
+                         ,TRANSMISSION VARCHAR2(50)
+                         ,ENGINE VARCHAR2(50)
+                         ,LICENCE_PLATE VARCHAR(50)
+                         ,PURCHASE_PRICE INT
+                         ,MILEAGE INT
+                         ,RENTAL_STATUS VARCHAR(50)
+                         ,COLOR VARCHAR(50)
+                         ,MODEL_ID INT 
+                         ,CONSTRAINT FK_MODEL 
+                          FOREIGN KEY (MODEL_ID) 
+                          REFERENCES RENTACAR_MODEL(MODEL_ID)
+                         ,BRANCH_ID INT
+                         ,CONSTRAINT FK_BRANCH
+                          FOREIGN KEY (BRANCH_ID)
+                          REFERENCES RENTACAR_BRANCH(BRANCH_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_CAR
+  BEFORE INSERT ON RENTACAR_CAR
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_CAR.nextval INTO :new.RENTACAR_CAR FROM dual;
+END;
+
+
+
+CREATE SEQUENCE SQ_RENTACAR_ACCOUNT START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_ACCOUNT(ACCOUNT_ID INT NOT NULL PRIMARY KEY
+                             ,USERNAME VARCHAR(50)
+                             ,PASSWORD VARCHAR(50)
+                             ,E_MAIL VARCHAR(50)
+                             ,CONSTRAINT EMP_EMAIL_UNIQUE UNIQUE (E_MAIL)
+                             ,CONSTRAINT email_format
+                              CHECK (REGEXP_LIKE (E_MAIL , '^\w+(\.\w+)*+@\w+(\.\w+)+$')));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_ACCOUNT
+  BEFORE INSERT ON RENTACAR_ACCOUNT
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_ACCOUNT.nextval INTO :new.ACCOUNT_ID FROM dual;
+END;
+
+
+CREATE SEQUENCE SQ_RENTACAR_EMPLOYEE START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_EMPLOYEE(EMPLOYEE_ID INT NOT NULL PRIMARY KEY
+                              ,START_DATE DATE
+                              ,END_DATE DATE
+                              ,NAME VARCHAR2(50)
+                              ,LAST_NAME VARCHAR2(50)
+                              ,ACCOUNT_ID INT
+                              ,CONSTRAINT FK_ACCOUNT
+                               FOREIGN KEY (ACCOUNT_ID)
+                               REFERENCES RENTACAR_ACCOUNT(ACCOUNT_ID)
+                              ,BRANCH_ID INT
+                              ,CONSTRAINT FK_EMPLOYEE_BRANCH
+                               FOREIGN KEY (BRANCH_ID)
+                               REFERENCES RENTACAR_BRANCH(BRANCH_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_EMPLOYEE
+  BEFORE INSERT ON RENTACAR_EMPLOYEE
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_EMPLOYEE.nextval INTO :new.EMPLOYEE_ID FROM dual;
+END;
+                                                 
+CREATE SEQUENCE SQ_RENTACAR_SERVICE_HIST START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_SERVICE_HIST(RECORD_ID INT NOT NULL PRIMARY KEY
+                                  ,PREVIOUS_SERVICE_DATE DATE
+                                  ,NEXT_SERVICE_DATE DATE
+                                  ,COST FLOAT
+                                  ,CAR_ID INT
+                                  ,CONSTRAINT FK_CAR
+                                   FOREIGN KEY (CAR_ID)
+                                   REFERENCES RENTACAR_CAR(CAR_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_SERVICE_HIST
+  BEFORE INSERT ON RENTACAR_SERVICE_HIST
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_SERVICE_HIST.nextval INTO :new.RECORD_ID FROM dual;
+END;
+
+
+
+CREATE SEQUENCE SQ_RENTACAR_LOGIN_STATUS START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_LOGIN_STATUS(LOGIN_STATUS_ID INT NOT NULL PRIMARY KEY
+                                  ,LOGIN_STATUS VARCHAR2(20));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_LOGIN_STATUS
+  BEFORE INSERT ON RENTACAR_LOGIN_STATUS
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_LOGIN_STATUS.nextval INTO :new.LOGIN_STATUS_ID FROM dual;
+END;
+
+
+CREATE SEQUENCE SQ_RENTACAR_PERSON START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_PERSON(PERSON_ID INT NOT NULL PRIMARY KEY
+                            ,FIRST_NAME VARCHAR2(50)
+                            ,LAST_NAME VARCHAR2(50)
+                            ,AGE INT
+                            ,LOGIN_STATUS_ID INT
+                            ,ACCOUNT_ID INT
+                            ,CONSTRAINT FK_LOGIN_STATUS
+                             FOREIGN KEY (LOGIN_STATUS_ID)
+                             REFERENCES RENTACAR_LOGIN_STATUS(LOGIN_STATUS_ID)
+                            ,CONSTRAINT FK_PERSON_ACCOUNT
+                             FOREIGN KEY (ACCOUNT_ID)
+                             REFERENCES RENTACAR_ACCOUNT(ACCOUNT_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_PERSON
+  BEFORE INSERT ON RENTACAR_PERSON
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_PERSON.nextval INTO :new.PERSON_ID FROM dual;
+END;
+                             
+
+CREATE SEQUENCE SQ_RENTACAR_CUSTOMER START WITH 1 INCREMENT BY 1; 
+CREATE TABLE RENTACAR_CUSTOMER(CUSTOMER_ID INT NOT NULL PRIMARY KEY
+                              ,PERSON_ID INT
+                              ,CONSTRAINT FK_PERSON
+                               FOREIGN KEY (PERSON_ID)
+                               REFERENCES RENTACAR_PERSON(PERSON_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_CUSTOMER
+  BEFORE INSERT ON RENTACAR_CUSTOMER
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_CUSTOMER.nextval INTO :new.CUSTOMER_ID FROM dual;
+END;
+
+
+CREATE SEQUENCE SQ_RENTACAR_RESERVATION START WITH 1 INCREMENT BY 1;                                
+CREATE TABLE RENTACAR_RESERVATION(RESERVATION_ID INT NOT NULL PRIMARY KEY
+                                 ,CUSTOMER_ID INT
+                                 ,CAR_ID INT
+                                 ,CONSTRAINT FK_CUSTOMER
+                                  FOREIGN KEY (CUSTOMER_ID)
+                                  REFERENCES RENTACAR_CUSTOMER(CUSTOMER_ID)
+                                 ,CONSTRAINT FK_RESERVATION_CAR
+                                  FOREIGN KEY (CAR_ID)
+                                  REFERENCES RENTACAR_CAR(CAR_ID));
+CREATE OR REPLACE TRIGGER TR_RENTACAR_RESERVATION
+  BEFORE INSERT ON RENTACAR_RESERVATION
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_RESERVATION.nextval INTO :new.RESERVATION_ID FROM dual;
+END;
+
+
+CREATE SEQUENCE SQ_RENTACAR_RENTAL START WITH 1 INCREMENT BY 1;                                   
+CREATE TABLE RENTACAR_RENTAL(RENTAL_ID INT NOT NULL PRIMARY KEY
+                            ,INSURANCE FLOAT
+                            ,PRICE FLOAT
+                            ,START_DATE DATE
+                            ,END_DATE DATE
+                            ,CUSTOMER_ID INT
+                            ,CAR_ID INT
+                            ,CONSTRAINT FK_RENTAL_CUSTOMER
+                             FOREIGN KEY (CUSTOMER_ID)
+                             REFERENCES RENTACAR_CUSTOMER(CUSTOMER_ID)
+                            ,CONSTRAINT FK_RENTAL_CAR
+                             FOREIGN KEY (CAR_ID)
+                             REFERENCES RENTACAR_CAR(CAR_ID));
+
+CREATE OR REPLACE TRIGGER TR_RENTACAR_RENTAL
+  BEFORE INSERT ON RENTACAR_RENTAL
+  FOR EACH ROW
+BEGIN
+  SELECT SQ_RENTACAR_RENTAL.nextval INTO :new.RENTAL_ID FROM dual;
+END;                                 
